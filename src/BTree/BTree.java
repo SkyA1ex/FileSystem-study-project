@@ -6,7 +6,6 @@ import java.util.*;
 public class BTree<Key extends Comparable<Key>, Value> {
 	
 	private static final int t = 4; // минимальная степень
-	private int ht; // высота B-дерева
 	Node root; // корень B-дерева
 	
 	// Класс хранит ключ и соответствующее ему значение
@@ -55,19 +54,30 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		public void incCount(){ ++n; }
 		public void decCount(){ --n; }
 		
+		public void setSize(int newSize) { 
+			if (newSize < n)
+				for (int i = newSize; i < n; ++i) {
+					data.remove(newSize);
+					// TODO: check how removes childs
+					//if (!isLeaf())
+					//	childs.remove(i+1);
+				}
+			else {
+				//TODO:need anything??
+			}
+			n = newSize;
+		}
+		
 	}
 	
 	// Конструктор
 	public BTree() { 
-		root = new Node(0); 
+		root = new Node(0,true); 
 	}
-	
-	// Возвращает высоту B-дерева
-	public int getHeight(){ return ht; }
 	
 	// Добавляет пару ключ-значение
 	public void Add(Key key, Value value) {
-		//TODO: Check all that below
+		//TODO: What will be in the case of existing key?!
 		if (root.n == 2*t-1) {
 			Node oldRoot = root;
 			Node newRoot = new Node(0, false);
@@ -83,26 +93,25 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 	
 	private void Insert(Node node, Key key, Value value) {
-		//TODO: Check all that below
 		int i = node.n;
 		// Узел - лист дерева
-		if (node.isLeaf()) {			
-			// TODO:Check this cycle
-			while ( i >= 0 && less(key, node.data.get(i).getKey()) ) {
-				node.data.set(i+1, node.data.get(i));
+		if (node.isLeaf()) {
+			while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
 				--i;
-			}
 			Entry newData = new Entry(key,value);
-			node.data.set(i+1, newData);
-			node.incCount();		
+			if ( i == node.n )
+				node.data.add(newData);
+			else
+				node.data.add(i, newData);
+			node.incCount();
 		}
 		// Узел - не лист
 		else {
-			while ( i >= 0 && less(key, node.data.get(i).getKey()) ) {
+			while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
 				--i;
-			}
-			++i;
-			if (node.childs.get(i).n == 2*t-1) {
+			// TODO:Test code below
+			// ++i; // not needed i think 
+ 			if (node.childs.get(i).n == 2*t-1) {
 				Split(node,i);
 				if ( larger(key, node.data.get(i).getKey()) )
 					++i;
@@ -111,24 +120,37 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		}
 	}
 	
+	// Разбивает дочерний узел с индексом childIndex
 	private void Split(Node node, int childIndex) {
-		//TODO: write implementation
+		Node leftChild = node.childs.get(childIndex);
+		// Новый потомок, который будет правым
+		Node rightChild = new Node(t-1, leftChild.isLeaf());
+		// Копирование значений в правый узел
+		for (int j = 0; j < t-1; ++j)
+			rightChild.data.add(leftChild.data.get(j+t));
+		// Копирование потомков, если не лист
+		if (!leftChild.isLeaf())
+			for ( int j = 0; j < t; ++j )
+				rightChild.childs.add(leftChild.childs.get(j+t));
+		Entry upper = leftChild.data.get(t-1);
+		leftChild.setSize(t-1);
+		
+		node.data.add(childIndex, upper);
+		node.childs.add(childIndex+1, rightChild);
+		node.setSize(node.n + 1);	
 	}
 	
 	/* 
 	 * Поиск по ключу, возващает значение, соответствующее ключу 
 	 * или null, если ключ не найден
 	*/
+	/*
 	public Value Find(Key key) {		
-		//TODO: write implementation
+		//TODO: write implementation for Find
 		return Search(root, key, ht);
 	}
-	
-	private Value Search(Node x, Key key, int ht){
-		//TODO: write implementation
-		return null;
-	}
-	
+
+	*/
 	private boolean larger(Key k1, Key k2) {
 		return ( k1.compareTo(k2) > 0 );
 	}
