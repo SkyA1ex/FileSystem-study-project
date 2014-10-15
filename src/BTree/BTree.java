@@ -77,7 +77,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	
 	// Добавляет пару ключ-значение
 	public void Add(Key key, Value value) {
-		//TODO: What will be in the case of existing key?!
 		if (root.n == 2*t-1) {
 			Node oldRoot = root;
 			Node newRoot = new Node(0, false);
@@ -94,10 +93,16 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	
 	private void Insert(Node node, Key key, Value value) {
 		int i = node.n;
+		// Поиск нужного индекса для добавления
+		while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
+			--i;
+		// Не добавлять, если элемент с таким ключом уже существует
+		if ( i > 0 && equal(node.data.get(i-1).getKey(), key) ) {
+			System.err.println("Item with this key already exist");
+			return;
+		}
 		// Узел - лист дерева
 		if (node.isLeaf()) {
-			while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
-				--i;
 			Entry newData = new Entry(key,value);
 			if ( i == node.n )
 				node.data.add(newData);
@@ -107,10 +112,8 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		}
 		// Узел - не лист
 		else {
-			while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
-				--i;
 			// TODO:Test code below
-			// ++i; // not needed i think 
+			// ++i; // not needed I think 
  			if (node.childs.get(i).n == 2*t-1) {
 				Split(node,i);
 				if ( larger(key, node.data.get(i).getKey()) )
@@ -144,18 +147,30 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	 * Поиск по ключу, возващает значение, соответствующее ключу 
 	 * или null, если ключ не найден
 	*/
-	/*
 	public Value Find(Key key) {		
-		//TODO: write implementation for Find
-		return Search(root, key, ht);
+		return Search(root, key);
 	}
 
-	*/
+	private Value Search(Node node, Key key) {
+		int i = 0;
+		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
+			++i;
+		if ( i < node.n && equal(key, node.data.get(i).getKey()) )
+			return node.data.get(i).getValue();
+		else if (node.isLeaf())
+			return null;
+		else 
+			return Search(node.childs.get(i), key);
+	}
+	
 	private boolean larger(Key k1, Key k2) {
 		return ( k1.compareTo(k2) > 0 );
 	}
 	private boolean less(Key k1, Key k2) {
 		return ( k1.compareTo(k2) < 0 );
+	}
+	private boolean equal(Key k1, Key k2) {
+		return ( k1.compareTo(k2) == 0);
 	}
 	
 	
