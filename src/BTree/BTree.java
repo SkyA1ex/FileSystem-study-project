@@ -38,7 +38,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		
 		public boolean isDeleted() { return deleted; }
 		
-		
 	}
 	
 	private class Node {
@@ -84,7 +83,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	
 	// Добавляет пару ключ-значение
 	public void Add(Key key, Value value) {
-		//TODO: Add implementation for deleted nodes(!!!)
 		if (root.n == 2*t-1) {
 			Node oldRoot = root;
 			Node newRoot = new Node(0, false);
@@ -92,7 +90,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 			newRoot.childs.add(oldRoot);
 			Split(newRoot,0);
 			Insert(newRoot,key,value);
-			
 		}
 		else {
 			Insert(root, key, value);
