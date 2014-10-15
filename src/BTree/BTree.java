@@ -12,10 +12,12 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	private final class Entry {
 		private Key key;
 		private Value value;
+		private boolean deleted;
 		
 		public Entry(Key key, Value value) {
 			this.key = key;
 			this.value = value;
+			this.deleted = false;
 		}
 		
 		public Key getKey() {
@@ -31,6 +33,11 @@ public class BTree<Key extends Comparable<Key>, Value> {
 			value = newValue;
 			return old;
 		}
+		
+		public void setDeleted(boolean b) { deleted = b; }
+		
+		public boolean isDeleted() { return deleted; }
+		
 		
 	}
 	
@@ -77,6 +84,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	
 	// Добавляет пару ключ-значение
 	public void Add(Key key, Value value) {
+		//TODO: Add implementation for deleted nodes(!!!)
 		if (root.n == 2*t-1) {
 			Node oldRoot = root;
 			Node newRoot = new Node(0, false);
@@ -94,12 +102,20 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	private void Insert(Node node, Key key, Value value) {
 		int i = node.n;
 		// Поиск нужного индекса для добавления
-		while ( i > 0 && less(key, node.data.get(i-1).getKey()) )
+		while (i > 0 && less(key, node.data.get(i-1).getKey()))
 			--i;
-		// Не добавлять, если элемент с таким ключом уже существует
-		if ( i > 0 && equal(node.data.get(i-1).getKey(), key) ) {
-			System.err.println("Item with this key already exist");
-			return;
+		if (i > 0 && equal(node.data.get(i-1).getKey(), key)) {
+			if (node.data.get(i-1).isDeleted()) {
+				// Изменяется значение и статус ранее удаленного элемента
+				node.data.get(i-1).setDeleted(false);
+				node.data.get(i-1).setValue(value);
+			}
+			else {
+				// Не добавлять, если элемент с таким ключом уже существует
+				System.err.println("Item with this key already exist");
+				return;
+			}
+			
 		}
 		// Узел - лист дерева
 		if (node.isLeaf()) {
@@ -156,12 +172,45 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
 			++i;
 		if ( i < node.n && equal(key, node.data.get(i).getKey()) )
-			return node.data.get(i).getValue();
+			if (node.data.get(i).isDeleted())
+				return null;
+			else
+				return node.data.get(i).getValue();
 		else if (node.isLeaf())
 			return null;
 		else 
 			return Search(node.childs.get(i), key);
 	}
+	
+	/*
+	 * Помечает элемент с заданным ключом как удаленный
+ 	 * (при этом структура дерева не изменяется(!)).
+	 * В дальнейшем доступна вставка по данному ключу.
+	 * Возвращает true, если элемент удален и false, если 
+	 * элемент с данным ключом не найден
+	 */
+	public boolean Remove(Key key) {
+		return Delete(root, key);
+	}
+	
+	private boolean Delete(Node node, Key key) {
+		int i = 0;
+		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
+			++i;
+		if ( i < node.n && equal(key, node.data.get(i).getKey()) ) 
+			if (node.data.get(i).isDeleted())
+				return false;
+			else {
+				node.data.get(i).setDeleted(true);
+				return true;
+			}
+		else if (node.isLeaf())
+			return false;
+		else
+			return Delete(node.childs.get(i),key);
+	}
+	
+	
 	
 	private boolean larger(Key k1, Key k2) {
 		return ( k1.compareTo(k2) > 0 );
