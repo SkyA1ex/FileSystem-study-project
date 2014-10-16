@@ -44,7 +44,7 @@ public class Disk {
 	 * если память данного размера может быть выделена 
 	 * и ноль в противном случае
 	*/
-	public int allocate(int fileSize) {
+	public int allocate(byte data[], int fileSize) {
 		int count = fileSize/clusterSize;
 		if ((fileSize%clusterSize) > 0)
 			count++;
@@ -54,8 +54,11 @@ public class Disk {
 			if ( isFree[i] == true ) {
 				++seq;
 				if (seq == count) {
-					for (int j=i-seq+1; j<=i; ++j)
+					for (int j=i-seq+1; j<=i; ++j) {
 						isFree[j] = false;
+					}
+					for (int j=0; j < fileSize; ++j)
+						memory[(i-seq+1)*clusterSize+j] = data[j];
 					return (i-seq+1)*clusterSize;
 				}
 			}
@@ -84,6 +87,7 @@ public class Disk {
 		else {
 			for ( int i = start; i < start+count; ++i )
 				isFree[i] = true;
+			
 		}
 	}
 	
