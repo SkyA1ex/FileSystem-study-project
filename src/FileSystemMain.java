@@ -8,15 +8,20 @@ import BTree.BTree;
 	
 		public static void main(String[] args) {
 			try {
-				Disk d = new Disk(4,1024);
-				int file1 = d.allocate(20);
-				int file2 = d.allocate(9);
-				d.free(file1, 20);
-				int file3 = d.allocate(100000);
-				d.free(3, 10);
+				FileSystem fs = new FileSystem(1024,4);
+				File file1 = new File("said.jpg",33);
+				fs.add(file1);
+				
+				System.out.println(fs.sizeOf("said.jpg"));
+				File newFile = fs.find("said.jpg");
+				fs.add(new File("qqq.qp",100));
+				fs.add(new File("third.zip",492));
+				fs.add(new File("q",1000000));
+				
+				
 				System.out.println();
 			} catch (Exception e) {
-				System.err.println(e.toString());
+				System.err.println(e);
 			}		
 			
 		}

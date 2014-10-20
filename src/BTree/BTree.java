@@ -82,21 +82,21 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 	
 	// Добавляет пару ключ-значение
-	public void Add(Key key, Value value) {
+	public void add(Key key, Value value) {
 		if (root.n == 2*t-1) {
 			Node oldRoot = root;
 			Node newRoot = new Node(0, false);
 			root = newRoot;
 			newRoot.childs.add(oldRoot);
-			Split(newRoot,0);
-			Insert(newRoot,key,value);
+			split(newRoot,0);
+			insert(newRoot,key,value);
 		}
 		else {
-			Insert(root, key, value);
+			insert(root, key, value);
 		}
 	}
 	
-	private void Insert(Node node, Key key, Value value) {
+	private void insert(Node node, Key key, Value value) {
 		int i = node.n;
 		// Поиск нужного индекса для добавления
 		while (i > 0 && less(key, node.data.get(i-1).getKey()))
@@ -126,18 +126,17 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		// Узел - не лист
 		else {
 			// TODO:Test code below
-			// ++i; // not needed I think 
  			if (node.childs.get(i).n == 2*t-1) {
-				Split(node,i);
+				split(node,i);
 				if ( larger(key, node.data.get(i).getKey()) )
 					++i;
 			}
-			Insert(node.childs.get(i),key,value);
+			insert(node.childs.get(i),key,value);
 		}
 	}
 	
 	// Разбивает дочерний узел с индексом childIndex
-	private void Split(Node node, int childIndex) {
+	private void split(Node node, int childIndex) {
 		Node leftChild = node.childs.get(childIndex);
 		// Новый потомок, который будет правым
 		Node rightChild = new Node(t-1, leftChild.isLeaf());
@@ -160,11 +159,11 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	 * Поиск по ключу, возващает значение, соответствующее ключу 
 	 * или null, если ключ не найден
 	*/
-	public Value Find(Key key) {		
-		return Search(root, key);
+	public Value find(Key key) {		
+		return search(root, key);
 	}
 
-	private Value Search(Node node, Key key) {
+	private Value search(Node node, Key key) {
 		int i = 0;
 		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
 			++i;
@@ -176,7 +175,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		else if (node.isLeaf())
 			return null;
 		else 
-			return Search(node.childs.get(i), key);
+			return search(node.childs.get(i), key);
 	}
 	
 	/*
@@ -186,11 +185,11 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	 * Возвращает true, если элемент удален и false, если 
 	 * элемент с данным ключом не найден
 	 */
-	public boolean Remove(Key key) {
-		return Delete(root, key);
+	public boolean remove(Key key) {
+		return delete(root, key);
 	}
 	
-	private boolean Delete(Node node, Key key) {
+	private boolean delete(Node node, Key key) {
 		int i = 0;
 		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
 			++i;
@@ -204,7 +203,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		else if (node.isLeaf())
 			return false;
 		else
-			return Delete(node.childs.get(i),key);
+			return delete(node.childs.get(i),key);
 	}
 	
 	

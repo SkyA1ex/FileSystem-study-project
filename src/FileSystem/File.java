@@ -13,6 +13,12 @@ public class File {
 		new Random().nextBytes(data);
 	}
 	
+	public File(String name, byte data[], int size) {
+		this.name = name;
+		this.size = size;
+		this.data = data;
+	}
+	
 	public int getSize() { return size; }
 	public String getName() { return name; }
 	

@@ -68,6 +68,27 @@ public class Disk {
 		return 0;
 	}
 	
+	// Возвращает копию участка памяти длины length, начиная с startIndex
+	public byte[] read(int startIndex, int length) {
+		// Перевод в кластеры
+		int start = startIndex/clusterSize;
+		int count = length/clusterSize;
+		if ((length%clusterSize) > 0)
+			count++;
+		if (start == 0)
+			throw new SecurityException("Attempt to delete service data " +
+					"with startIndex = " + String.valueOf(startIndex));
+		if (start + count > diskSize)
+			throw new IndexOutOfBoundsException("Index out of disk memory: " +
+					"diskSize = " + String.valueOf(diskSize) +
+					"; index = " + String.valueOf(start+count));
+		
+		byte data[] = new byte[length];
+		for (int i = 0; i < length; ++i)
+			data[i] = memory[startIndex+i];
+		return data;
+	}
+	
 	// Освобождает память размера fileSize, начиная с индекса startIndex
 	public void free(int startIndex, int fileSize) {
 		// Перевод в кластеры
@@ -78,7 +99,7 @@ public class Disk {
 		
 		if (start == 0)
 			throw new SecurityException("Attempt to delete service data " +
-		"with startIndex = " + String.valueOf(startIndex));
+					"with startIndex = " + String.valueOf(startIndex));
 		
 		if (start + count > diskSize)
 			throw new IndexOutOfBoundsException("Index out of disk memory: " +
