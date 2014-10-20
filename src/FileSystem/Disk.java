@@ -10,7 +10,7 @@ public class Disk {
 	private final int diskSize;	// Размер диска в кластерах
 	
 	// Конструктор. Размер кластера и диска задается в байтах
-	public Disk(int clusterSize, int diskSize) {
+	public Disk(int diskSize, int clusterSize) {
 		this.clusterSize = clusterSize;
 		this.diskSize = diskSize/clusterSize;
 		
