@@ -26,15 +26,15 @@ public class FileSystem {
 	private final int DEFAULT_CLUSTER_SIZE = 4;
 	
 	public FileSystem(int size, int clusterSize) {
-		if (size < clusterSize)
-			throw new DiskSizeException("Disk size must be more than clusterSize;");
+		if (clusterSize <= 0 || size < clusterSize)
+			throw new DiskSizeException("Wrong disk size or cluster size;");
 		files = new BTree<String, FileInfo>();
 		disk = new Disk(size, clusterSize);
 	}
 	
 	public FileSystem(int size) {
-		if (size < DEFAULT_CLUSTER_SIZE)
-			throw new DiskSizeException("Disk size must be more than clusterSize;");
+		if (DEFAULT_CLUSTER_SIZE <= 0 || size < DEFAULT_CLUSTER_SIZE)
+			throw new DiskSizeException("Wrong disk size or cluster size;");
 		files = new BTree<String, FileInfo>();
 		disk = new Disk(size, DEFAULT_CLUSTER_SIZE);
 	}
@@ -53,12 +53,16 @@ public class FileSystem {
 		return files.find(fileName) != null;		
 	}
 	
+	// Добавляет файл в файловую систему
 	public void add(File file) {
+		if ( files.find(file.getName()) != null )
+			throw new FileAlreadyExistException("File " + file.getName() + " already "
+											+ "exist;");
 		int address = disk.allocate(file.data, file.getSize());
 		if ( address != 0)
 			files.add(file.getName(), new FileInfo(address,file.getSize()));
 		else throw new NotEnoughMemoryException("Not enough memory for allocate file: " +
-											file.getName() + ";");		
+											file.getName() + ";");
 	}
 	
 	// Возвращает размер файла по его имени

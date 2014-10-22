@@ -64,8 +64,8 @@ public class BTree<Key extends Comparable<Key>, Value> {
 			if (newSize < n)
 				for (int i = newSize; i < n; ++i) {
 					data.remove(newSize);
-					// TODO: check how removes childs
-					//if (!isLeaf())
+					//	TODO: check how removes childs
+					//	if (!isLeaf())
 					//	childs.remove(i+1);
 				}
 			else {
