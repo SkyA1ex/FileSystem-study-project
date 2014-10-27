@@ -58,7 +58,7 @@ public class FileSystem {
 		if ( files.find(file.getName()) != null )
 			throw new FileAlreadyExistException("File " + file.getName() + " already "
 											+ "exist;");
-		int address = disk.allocate(file.data, file.getSize());
+		int address = disk.allocate(file.data, file.getSize()); 
 		if ( address != 0)
 			files.add(file.getName(), new FileInfo(address,file.getSize()));
 		else throw new NotEnoughMemoryException("Not enough memory for allocate file: " +

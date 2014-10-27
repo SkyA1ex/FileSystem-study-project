@@ -97,23 +97,32 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 	
 	private void insert(Node node, Key key, Value value) {
-		int i = node.n;
-		// Поиск нужного индекса для добавления
-		while (i > 0 && less(key, node.data.get(i-1).getKey()))
-			--i;
-		if (i > 0 && equal(node.data.get(i-1).getKey(), key)) {
-			if (node.data.get(i-1).isDeleted()) {
+		// Поиск узла для вставки
+		ListIterator<Entry> it = node.data.listIterator(node.data.size());
+		while (it.hasPrevious()) {
+			if (key.compareTo(it.previous().getKey()) > 0) {
+				it.next();
+				break;
+			}
+		}
+		
+		// Проверка в случае наличия данного ключа
+		int i = it.previousIndex();
+		if (i >= 0 && key.compareTo(node.data.get(i).getKey()) == 0) {
+			Entry e = node.data.get(i);
+			if (e.isDeleted()) {
 				// Изменяется значение и статус ранее удаленного элемента
-				node.data.get(i-1).setDeleted(false);
-				node.data.get(i-1).setValue(value);
+				e.setDeleted(false);
+				e.setValue(value);
 			}
 			else {
 				// Не добавлять, если элемент с таким ключом уже существует
 				System.err.println("Item with this key already exist");
 				return;
 			}
-			
-		}
+		}		
+		
+		i = it.nextIndex();
 		// Узел - лист дерева
 		if (node.isLeaf()) {
 			Entry newData = new Entry(key,value);
@@ -125,10 +134,9 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		}
 		// Узел - не лист
 		else {
-			// TODO:Test code below
  			if (node.childs.get(i).n == 2*t-1) {
 				split(node,i);
-				if ( larger(key, node.data.get(i).getKey()) )
+				if ( key.compareTo(node.data.get(i).getKey()) > 0 )
 					++i;
 			}
 			insert(node.childs.get(i),key,value);
@@ -164,18 +172,21 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 
 	private Value search(Node node, Key key) {
-		int i = 0;
-		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
-			++i;
-		if ( i < node.n && equal(key, node.data.get(i).getKey()) )
-			if (node.data.get(i).isDeleted())
-				return null;
-			else
-				return node.data.get(i).getValue();
-		else if (node.isLeaf())
-			return null;
+		// Поиск нужного элемента
+		ListIterator<Entry> it = node.data.listIterator();
+		while ( it.hasNext() ) {
+			if ( key.compareTo(it.next().getKey()) <= 0) {
+				it.previous();
+				break;
+			}
+		}
+		
+		int i = it.nextIndex();
+		Entry e = node.data.get(i);
+		if ( i < node.n && key.compareTo(e.getKey()) == 0 )
+			return (e.isDeleted()) ? null : e.getValue();
 		else 
-			return search(node.childs.get(i), key);
+			return (node.isLeaf()) ? null : search(node.childs.get(i),key);
 	}
 	
 	/*
@@ -190,33 +201,22 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 	
 	private boolean delete(Node node, Key key) {
-		int i = 0;
-		while ( i < node.n && larger(key, node.data.get(i).getKey()) )
-			++i;
-		if ( i < node.n && equal(key, node.data.get(i).getKey()) ) 
-			if (node.data.get(i).isDeleted())
-				return false;
-			else {
-				node.data.get(i).setDeleted(true);
-				return true;
+		// Поиск нужного элемента
+		ListIterator<Entry> it = node.data.listIterator();
+		while ( it.hasNext() ) {
+			if ( key.compareTo(it.next().getKey()) <= 0) {
+				it.previous();
+				break;
 			}
-		else if (node.isLeaf())
-			return false;
-		else
-			return delete(node.childs.get(i),key);
+		}
+		
+		int i = it.nextIndex();
+		Entry e = node.data.get(i);
+		while ( i < node.n && key.compareTo(e.getKey()) > 0 )
+			++i;
+		if ( i < node.n && key.compareTo(e.getKey()) == 0 ) 
+			return (e.isDeleted()) ? false : true;
+		else 
+			return (node.isLeaf()) ? false : delete(node.childs.get(i), key);
 	}
-	
-	
-	
-	private boolean larger(Key k1, Key k2) {
-		return ( k1.compareTo(k2) > 0 );
-	}
-	private boolean less(Key k1, Key k2) {
-		return ( k1.compareTo(k2) < 0 );
-	}
-	private boolean equal(Key k1, Key k2) {
-		return ( k1.compareTo(k2) == 0);
-	}
-	
-	
 }
