@@ -9,7 +9,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	Node root; // корень B-дерева
 	
 	// Класс хранит ключ и соответствующее ему значение
-	private final class Entry {
+	private final class Entry implements Comparable<Entry>{
 		private Key key;
 		private Value value;
 		private boolean deleted;
@@ -37,6 +37,11 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		public void setDeleted(boolean b) { deleted = b; }
 		
 		public boolean isDeleted() { return deleted; }
+
+		@Override
+		public int compareTo(Entry o) {
+			return key.compareTo(o.key);
+		}
 		
 	}
 	
@@ -68,9 +73,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 					//	if (!isLeaf())
 					//	childs.remove(i+1);
 				}
-			else {
-				//TODO:need anything??
-			}
 			n = newSize;
 		}
 		
@@ -97,18 +99,9 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	}
 	
 	private void insert(Node node, Key key, Value value) {
-		// Поиск узла для вставки
-		ListIterator<Entry> it = node.data.listIterator(node.data.size());
-		while (it.hasPrevious()) {
-			if (key.compareTo(it.previous().getKey()) > 0) {
-				it.next();
-				break;
-			}
-		}
-		
-		// Проверка в случае наличия данного ключа
-		int i = it.previousIndex();
-		if (i >= 0 && key.compareTo(node.data.get(i).getKey()) == 0) {
+		int i = Collections.binarySearch(node.data, new Entry(key,value));
+		if (i >= 0) {
+			// Проверка в случае наличия данного ключа
 			Entry e = node.data.get(i);
 			if (e.isDeleted()) {
 				// Изменяется значение и статус ранее удаленного элемента
@@ -120,26 +113,26 @@ public class BTree<Key extends Comparable<Key>, Value> {
 				System.err.println("Item with this key already exist");
 				return;
 			}
-		}		
-		
-		i = it.nextIndex();
-		// Узел - лист дерева
-		if (node.isLeaf()) {
-			Entry newData = new Entry(key,value);
-			if ( i == node.n )
-				node.data.add(newData);
-			else
-				node.data.add(i, newData);
-			node.incCount();
 		}
-		// Узел - не лист
 		else {
- 			if (node.childs.get(i).n == 2*t-1) {
-				split(node,i);
-				if ( key.compareTo(node.data.get(i).getKey()) > 0 )
-					++i;
+			// Read Collections.binarySearch
+			i = i*(-1) - 1;
+			
+			if (node.isLeaf()) {
+				Entry newData = new Entry(key,value);
+				node.data.add(i, newData);
+				node.incCount();
 			}
-			insert(node.childs.get(i),key,value);
+			// Узел - не лист
+			else {
+	 			if (node.childs.get(i).n == 2*t-1) {
+					split(node,i);
+					if ( key.compareTo(node.data.get(i).getKey()) > 0 )
+						++i;
+				}
+				insert(node.childs.get(i),key,value);
+			}
+			
 		}
 	}
 	
@@ -173,20 +166,17 @@ public class BTree<Key extends Comparable<Key>, Value> {
 
 	private Value search(Node node, Key key) {
 		// Поиск нужного элемента
-		ListIterator<Entry> it = node.data.listIterator();
-		while ( it.hasNext() ) {
-			if ( key.compareTo(it.next().getKey()) <= 0) {
-				it.previous();
-				break;
-			}
-		}
+		int i = Collections.binarySearch(node.data, new Entry(key, null));
 		
-		int i = it.nextIndex();
-		Entry e = node.data.get(i);
-		if ( i < node.n && key.compareTo(e.getKey()) == 0 )
+		if (i >= 0) {
+			Entry e = node.data.get(i);
 			return (e.isDeleted()) ? null : e.getValue();
-		else 
+		}
+		else {
+			// Read Collections.binarySearch
+			i = i*(-1) - 1;
 			return (node.isLeaf()) ? null : search(node.childs.get(i),key);
+		}
 	}
 	
 	/*
@@ -202,21 +192,20 @@ public class BTree<Key extends Comparable<Key>, Value> {
 	
 	private boolean delete(Node node, Key key) {
 		// Поиск нужного элемента
-		ListIterator<Entry> it = node.data.listIterator();
-		while ( it.hasNext() ) {
-			if ( key.compareTo(it.next().getKey()) <= 0) {
-				it.previous();
-				break;
+		int i = Collections.binarySearch(node.data, new Entry(key, null));
+		if (i >= 0) {
+			Entry e = node.data.get(i);
+			if (e.isDeleted())
+				return false;
+			else {
+				e.setDeleted(true);
+				node.setSize(node.n - 1);
+				return true;
 			}
 		}
-		
-		int i = it.nextIndex();
-		Entry e = node.data.get(i);
-		while ( i < node.n && key.compareTo(e.getKey()) > 0 )
-			++i;
-		if ( i < node.n && key.compareTo(e.getKey()) == 0 ) 
-			return (e.isDeleted()) ? false : true;
-		else 
-			return (node.isLeaf()) ? false : delete(node.childs.get(i), key);
+		else {
+			i = i*(-1) - 1;
+			return (node.isLeaf()) ? false : delete(node.childs.get(i),key);
+		}
 	}
 }
