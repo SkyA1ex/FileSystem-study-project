@@ -6,6 +6,7 @@ import java.util.*;
 public class BTree<Key extends Comparable<Key>, Value> {
 	
 	private static final int t = 4; // минимальная степень
+	private int size = 0; // количество доступных ключей в дереве
 	Node root; // корень B-дерева
 	
 	// Класс хранит ключ и соответствующее ему значение
@@ -83,6 +84,14 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		root = new Node(0,true); 
 	}
 	
+	// Возвращает количество доступных элементов в дереве
+	public int getSize() { return size; }
+	
+	public void clear() {
+		root = new Node(0,true);
+		size = 0;
+	}
+	
 	// Добавляет пару ключ-значение
 	public void add(Key key, Value value) {
 		if (root.n == 2*t-1) {
@@ -107,6 +116,7 @@ public class BTree<Key extends Comparable<Key>, Value> {
 				// Изменяется значение и статус ранее удаленного элемента
 				e.setDeleted(false);
 				e.setValue(value);
+				++size;
 			}
 			else {
 				// Не добавлять, если элемент с таким ключом уже существует
@@ -117,11 +127,11 @@ public class BTree<Key extends Comparable<Key>, Value> {
 		else {
 			// Read Collections.binarySearch
 			i = i*(-1) - 1;
-			
 			if (node.isLeaf()) {
 				Entry newData = new Entry(key,value);
 				node.data.add(i, newData);
 				node.incCount();
+				++size;
 			}
 			// Узел - не лист
 			else {
@@ -199,7 +209,8 @@ public class BTree<Key extends Comparable<Key>, Value> {
 				return false;
 			else {
 				e.setDeleted(true);
-				node.setSize(node.n - 1);
+				node.decCount();
+				--size;
 				return true;
 			}
 		}
@@ -208,4 +219,6 @@ public class BTree<Key extends Comparable<Key>, Value> {
 			return (node.isLeaf()) ? false : delete(node.childs.get(i),key);
 		}
 	}
+
+	
 }
